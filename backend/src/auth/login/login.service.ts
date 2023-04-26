@@ -5,12 +5,12 @@ import { User } from 'src/users/users.entity';
 import { createHash } from 'crypto';
 import { LoginUserDto } from 'src/interfaces/login.user.dto';
 import { comparePassword } from 'src/common/utils/bcrypt';
-
 @Injectable()
 export class LoginService {
     constructor(
         private readonly usersService: UsersService,
-        private readonly jwtService: JwtService
+        private readonly jwtService: JwtService,
+
     ) {}
 
     public async validateUser(email: string, password: string): Promise<User> {

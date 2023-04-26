@@ -1,12 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { hashedEmail } from 'src/common/utils/bcrypt';
+import { compareEmail, hashedEmail } from 'src/common/utils/bcrypt';
 import * as bcrypt from 'bcrypt';
 const nodemailer = require('nodemailer');
 import config from '../common/utils/config';
 import { confirmMail } from './template/confirm.mail.html';
 import { resetPassword } from './template/reset.passowrd.html';
+import { changePasswordInfo } from './template/change.password-info.html';
 import { resolve } from 'path';
+import { createHash } from 'crypto';
 
 
 @Injectable()
@@ -25,22 +27,19 @@ export class MailerService {
     private transporter;
 
     private logger = new Logger('MailerService');
-    // public confirm(token, email) {
-    //     const hash = hashedEmail(email)
-    //     return token === hash
-    // }
-    public confirm(token, email) {
+
+    public confirmEmail(token, email) {
         const hash = hashedEmail(email)
-        return bcrypt.compareSync(token, hash)
+        return compareEmail(email, hash);
     }
 
     public async sendResetPassword(email): Promise<boolean> {
         const hash = hashedEmail(email)
-        const ButtonLink = 
-            this.configService.get('RESET_PASSWORD') + `?token=${hash}&email=${email}`;
+        const ButtonLink = `${config.project.resetPasswordUrl}?token=${hash}&email=${email}`;
         console.log(ButtonLink);
 
         const mail = resetPassword
+        .replace(new RegExp('--PersonName--', 'g'), email)
         .replace(new RegExp('--ProjectName--', 'g'), config.project.name)
         .replace(new RegExp('--ProjectAddress--', 'g'), config.project.address)
         .replace(new RegExp('--ProjectLogo--', 'g'), config.project.logoUrl)
@@ -49,22 +48,11 @@ export class MailerService {
         .replace(new RegExp('--ProjectLink--', 'g'), config.project.url)
         .replace(new RegExp('--ButtonLink--', 'g'), ButtonLink);
 
-        // const mailOptions = await this.transporter.sendMail({
-        //     from: this.configService.get('SMTP_SENDER'),
-        //     to: email,
-        //     subject: 'Password Recovery',
-        //     html: `
-        //     <p>You have requested password recovery for instagig.
-        //     Please follow <a href=${link}>this link</a> 
-        //     to set a new password.</p>
-        //     `,
-        // })
-
         const mailOptions = {
             from: this.configService.get('SMPTP_SENDER'),
             to: email,
             subject: `Reset Your ${config.project.name} Account's Password`,
-            hmtm: mail
+            html: mail
         }
         return new Promise<boolean>((resolve) =>
         this.transporter.sendMail(mailOptions, async (error) => {
@@ -79,10 +67,10 @@ export class MailerService {
     );
 }
 
+
     public async sendEmailConfirm(user): Promise<boolean> {
         const hash = hashedEmail(user.email)
-        const ButtonLink = 
-            this.configService.get('MAIL_VERIFICATION_URL') + `?token=${hash}&email=${user.email}`;
+        const ButtonLink = `${config.project.mailVerificationUrl}?token=${hash}&email=${user.email}`;
         console.log(ButtonLink);
 
         const mail = confirmMail
