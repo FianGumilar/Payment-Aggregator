@@ -32,6 +32,10 @@ export class User {
     phone: number;
 
     @ApiProperty()
+    @Column({ default: false })
+    emailConfirmed: boolean;
+
+    @ApiProperty()
     @CreateDateColumn()
     createdAt: Date;
 

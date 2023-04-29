@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TypeOrmCrudService } from '@nestjsx/crud-typeorm';
 import { Repository } from 'typeorm';
 import { User } from './users.entity';
+import { encodePassword } from 'src/common/utils/bcrypt';
 
 
 @Injectable()
@@ -25,6 +26,25 @@ export class UsersService extends TypeOrmCrudService<User> {
     public async saveUser(user): Promise<User | undefined> {
         return await this.usersRepository.save(user);
     }
+
+    public async changePassword(
+        user_id: string,
+        newPassword: string
+    ): Promise<void> {
+        const user =  await this.usersRepository.findOneBy({user_id}) 
+        if(!user) {
+            throw new NotFoundException('User not found')
+        }
+        const hashPassword = encodePassword(newPassword);
+        user.password = hashPassword;
+
+        await this.usersRepository.save(user);
+    }
+
+    public async findByUserId(user_id: string): Promise<User | undefined> {
+        return await this.usersRepository.findOneBy({ user_id });
+    }
+
 
     // public async updateProfile({ uuid }, updateDto): Promise<User | null | 401 | 406> {
     //     let user = await this.

@@ -6,6 +6,7 @@ import { SwaggerDocumentOptions } from '@nestjs/swagger';
 import { RegisterModule } from './auth/register/register.module';
 import { UsersModule } from './users/users.module';
 import { LoginModule } from './auth/login/login.module';
+import { MailerModule } from './mailer/mailer.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -25,6 +26,7 @@ async function bootstrap() {
         RegisterModule,
         LoginModule,
         UsersModule,
+        MailerModule
       ]
     }
   const setupOptions = {
