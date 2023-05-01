@@ -11,6 +11,9 @@ import { MailerModule } from './mailer/mailer.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api/v1')
+  app.enableCors({
+    origin: 'http://localhost:8080'
+  })
   const configService = app.get(ConfigService);
   const port = +configService.get('PORT')
 
